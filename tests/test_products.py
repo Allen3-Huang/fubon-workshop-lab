@@ -31,3 +31,31 @@ def test_get_missing_product(client: TestClient) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Product not found"}
+
+
+def test_list_products_max_price_filters(client: TestClient) -> None:
+    response = client.get("/products?max_price=40000")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert all(item["price"] <= 40000 for item in body["items"])
+    assert body["total"] == len(body["items"])
+
+
+def test_list_products_max_price_zero_is_invalid(client: TestClient) -> None:
+    response = client.get("/products?max_price=0")
+
+    assert response.status_code == 422
+
+
+def test_list_products_max_price_negative_is_invalid(client: TestClient) -> None:
+    response = client.get("/products?max_price=-1")
+
+    assert response.status_code == 422
+
+
+def test_list_products_max_price_absent_returns_all(client: TestClient) -> None:
+    response = client.get("/products")
+
+    assert response.status_code == 200
+    assert response.json()["total"] == 6
