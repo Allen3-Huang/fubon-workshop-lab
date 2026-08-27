@@ -1,3 +1,5 @@
+from typing import Annotated, Literal
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models import Product, ProductPage
@@ -5,17 +7,28 @@ from app.repository import get_product, list_products
 
 router = APIRouter(prefix="/products", tags=["products"])
 
+SortField = Literal["name", "price"]
+SortOrder = Literal["asc", "desc"]
+
 
 @router.get("", response_model=ProductPage)
 def read_products(
-    max_price: float | None = Query(default=None, gt=0),
+    q: str | None = None,
+    sort: Annotated[SortField | None, Query()] = None,
+    order: Annotated[SortOrder, Query()] = "asc",
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=20)] = 20,
+    max_price: Annotated[float | None, Query(gt=0)] = None,
 ) -> ProductPage:
-    products = list_products(max_price=max_price)
+    products = list_products(q=q, max_price=max_price, sort=sort, order=order)
+    total = len(products)
+    start = (page - 1) * page_size
+    items = products[start : start + page_size]
     return ProductPage(
-        items=products,
-        total=len(products),
-        page=1,
-        page_size=20,
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
     )
 
 
