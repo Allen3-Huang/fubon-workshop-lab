@@ -1,3 +1,5 @@
+import math
+
 from app.models import Product
 
 PRODUCTS = [
@@ -10,8 +12,39 @@ PRODUCTS = [
 ]
 
 
-def list_products() -> list[Product]:
-    return PRODUCTS.copy()
+def list_products(
+    q: str | None = None,
+    sort: str | None = None,
+    order: str = "asc",
+    page: int = 1,
+    page_size: int = 20,
+) -> dict:
+    results = PRODUCTS.copy()
+
+    if q:
+        q_lower = q.lower()
+        results = [
+            p for p in results
+            if q_lower in p.name.lower() or q_lower in p.category.lower()
+        ]
+
+    if sort == "name":
+        results = sorted(results, key=lambda p: p.name, reverse=(order == "desc"))
+    elif sort == "price":
+        results = sorted(results, key=lambda p: p.price, reverse=(order == "desc"))
+
+    total = len(results)
+    total_pages = math.ceil(total / page_size) if page_size else 0
+    start = (page - 1) * page_size
+    items = results[start: start + page_size]
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
 
 
 def get_product(product_id: int) -> Product | None:
