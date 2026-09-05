@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, Field
+import math
+
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class Product(BaseModel):
@@ -15,4 +17,11 @@ class ProductPage(BaseModel):
     total: int = Field(ge=0)
     page: int = Field(ge=1)
     page_size: int = Field(ge=1)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def total_pages(self) -> int:
+        if self.total == 0:
+            return 0
+        return math.ceil(self.total / self.page_size)
 
