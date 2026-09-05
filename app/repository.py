@@ -14,6 +14,27 @@ def list_products() -> list[Product]:
     return PRODUCTS.copy()
 
 
+def search_products(
+    q: str | None = None,
+    sort: str | None = None,
+    order: str = "asc",
+) -> list[Product]:
+    products = list_products()
+
+    if q:
+        needle = q.lower()
+        products = [
+            product
+            for product in products
+            if needle in product.name.lower() or needle in product.category.lower()
+        ]
+
+    if sort is not None:
+        products.sort(key=lambda product: getattr(product, sort), reverse=order == "desc")
+
+    return products
+
+
 def get_product(product_id: int) -> Product | None:
     return next((product for product in PRODUCTS if product.id == product_id), None)
 
